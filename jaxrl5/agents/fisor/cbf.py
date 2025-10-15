@@ -206,7 +206,7 @@ class CBF(Agent):
                              cond_encoder_cls=cond_model_cls,
                              reverse_encoder_cls=base_model_cls)
 
-        elif actor_architecture == "gaussian":
+        elif actor_architecture == 'gaussian':
             actor_def = GaussianPolicy(hidden_dims=actor_hidden_dims, action_dim=action_dim)
 
         else:
@@ -215,7 +215,7 @@ class CBF(Agent):
         time = jnp.zeros((1, 1))
         observations = jnp.expand_dims(observations, axis = 0)
         actions = jnp.expand_dims(actions, axis = 0)
-        if actor_architecture == "gaussian":
+        if actor_architecture == 'gaussian':
             actor_params = actor_def.init(actor_key, observations,
                                             time)['params']
         else:
@@ -736,9 +736,15 @@ class CBF(Agent):
         return actions
 
     def eval_actions(self, observations: jnp.ndarray, model_cls="gdcbf"):
+#<<<<<<< updated
         # if self.actor_architecture == ""
         observations = jax.device_put(observations)
         return self.eval_actions_jit(observations), self
+#=======
+        # if self.actor_architecture == 'gaussian':
+        observations = jax.device_put(observations)
+        return self.eval_actions_jit_gaussian(observations), self
+#>>>>>>> main
 
         dist = self.score_model.apply_fn(
             {"params": self.score_model.params}, observations

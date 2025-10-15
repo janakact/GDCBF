@@ -91,16 +91,16 @@ def get_config(config_string):
                     actor_layer_norm=True,
                     value_layer_norm=False,
                     actor_tau=0.001,
-                    actor_architecture='gaussian',
+                    actor_architecture='gaussian',#[gaussian, ln_resnet,mlp]
                     critic_objective='expectile',
                     critic_hyperparam = 0.9,
                     cost_critic_hyperparam = 0.8,
                     critic_type="hj", #[hj, qc] #qc = Q-critic, which is standard in reinforcement learning for estimating action values.
                     cost_ub=150,
-                    beta_schedule='linear',
-                    actor_objective="bc",#[bc,feasibility] 
-                    sampling_method="dpm_solver-1", 
-                    extract_method="minqc",#[minqc, maxq]
+                    beta_schedule='linear',#[cosine, linear, vp]
+                    actor_objective="feasibility",#[bc,feasibility] 
+                    sampling_method="dpm_solver-1", #[dpmm_solver-1,  ddpm]
+                    extract_method="maxq",#[minqc, maxq]
                     max_weight = 100.0,
                     qh_penalty_scale = 1.0
                 ),
