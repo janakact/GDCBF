@@ -5,7 +5,7 @@ def get_config(config_string):
     base_real_config = dict(
         project='safe-cbf',
         seed=-1,
-        max_steps=100_000,
+        max_steps=1000_000,
         eval_episodes=20,
         batch_size=512, #Actor batch size x 2 (so really 1024), critic is fixed to 256
         log_interval=1000,
@@ -17,7 +17,7 @@ def get_config(config_string):
         base_real_config["seed"] = np.random.randint(1000)
 
     base_data_config = dict(
-        cost_scale=25,
+        cost_scale=1,
         pr_data='data/point_robot-expert-random-100k.hdf5', # The location of point_robot data
     )
 
