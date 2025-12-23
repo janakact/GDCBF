@@ -50,6 +50,7 @@ class CBF(Agent):
     actor_tau: float
     reward_tau: float
     cost_tau: float     
+    tanh_scale: float
     action_dim: int = struct.field(pytree_node=False)
     N : int = struct.field(pytree_node=False)
     reward_temperature: float
@@ -81,6 +82,7 @@ class CBF(Agent):
         N: int = 64,
         decay_steps: Optional[int] = int(2e6),
         cost_tau: float = 0.2,
+        tanh_scale: float = 1.0,
         r_min: float = -1.0,
         mode: int = 1,  # 1: 'fisor', 2: 'add', 3: 'reach'
         actor_tau: float = 0.001,
@@ -162,6 +164,7 @@ class CBF(Agent):
                                   tx=value_optimiser)
   
 
+        print("Mode", mode)
         return cls(
             actor=None, # Base class attribute
             score_model=score_model,
@@ -180,6 +183,7 @@ class CBF(Agent):
             reward_tau=reward_tau,
             reward_temperature=reward_temperature,
             cost_tau=cost_tau,
+            tanh_scale=tanh_scale,
             cost_ub=cost_ub,
             r_min=r_min,
             mode=mode,
@@ -241,20 +245,22 @@ class CBF(Agent):
         # we sample N action candidates and select the safest one (i.e., the lowest Q*_h value) as the final output
 
         # Sample actions from the learned Gaussian policy
-        # rng, key = jax.random.split(rng, 2)
+        new_rng, key = jax.random.split(rng, 2)
         dist = self.score_model.apply_fn(
             {"params": self.score_model.params}, 
             observations_batch,
-            temperature=0 # rng doesn't matter if temperature=0
+            temperature=1 # rng doesn't matter if temperature=0, all actions will be zero. So there is not pooint sampling N actions if temp=0.
         )
         # actions = dist.sample(seed=key)
-        actions = dist.sample(seed=self.rng)
+        actions = dist.sample(seed=key)
+
+        # q = compute_q(self.target_critic.apply_fn, self.target_critic.params, observations_batch, actions)
+        # idx = jnp.argmax(q)
+        # # select the safest one (i.e., the lowest Q*_h value) as the final output
         qcs = compute_safe_q(self.safe_target_critic.apply_fn, self.safe_target_critic.params, observations_batch, actions)
-        # select the safest one (i.e., the lowest Q*_h value) as the final output
         idx = jnp.argmin(qcs)        
         action = actions[idx]
         # action = actions[0]
-        new_rng = rng
         # return np.array(action.squeeze()), self.replace(rng=new_rng)
         return action.squeeze(), self.replace(rng=new_rng)
 
@@ -373,6 +379,9 @@ class CBF(Agent):
             target_qh = jnp.min(selected,axis=0)
             # update RNG so choices change across steps
             agent = agent.replace(rng=rng)
+        elif agent.mode == 10:  # Custom Tanh version
+            scale = 0.1
+            target_qh = nn.tanh(jnp.maximum(h_sa*agent.tanh_scale, next_vh))
         else:
             raise ValueError(f"Unknown CBF mode: {agent.mode}")
         

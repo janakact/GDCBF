@@ -14,6 +14,7 @@ from ml_collections import config_flags, ConfigDict
 import wandb
 from tqdm.auto import trange  # noqa
 # import gymnasium as gym
+import dsrl
 import gym
 from env.env_list import env_list
 from env.point_robot import PointRobot
@@ -27,7 +28,12 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('env_id', 23, 'Choose env')
 flags.DEFINE_float('ratio', 1.0, 'dataset ratio')
 flags.DEFINE_integer('mode', 1, 'Mode for training')
+flags.DEFINE_float('cost_tau', 0.25, 'Cost Tau')
+flags.DEFINE_float('reward_tau', 0.6, 'Reward Tau')
+flags.DEFINE_float('tanh_scale', 1.0, 'Tanh Scale')
+
 flags.DEFINE_integer('max_steps', 500_001, 'max steps')
+flags.DEFINE_integer('seed', 0, 'Seed')
 # flags.DEFINE_integer('eval', 10000, 'eval steps')
 flags.DEFINE_string('project', '081125', 'Name of the experiment')
 # flags.DEFINE_string("config", "train_config.py:r", "Config file")
@@ -47,6 +53,8 @@ def to_dict(config):
 
 def call_main(details, env_id):
     details['agent_kwargs']['cost_scale'] = details['dataset_kwargs']['cost_scale']
+    print(details)
+    print( "----", "\n"*2)
     config_for_wandb = to_dict(details['agent_kwargs'])
     wandb.init(project=details['project'], name=details['experiment_name'], group=details['group'], config=config_for_wandb)
     # details['agent_kwargs']['mode'] = wandb.config.mode
@@ -66,8 +74,10 @@ def call_main(details, env_id):
     ds.seed(details["seed"])
     obs_mean = ds.obs_mean
     obs_std = ds.obs_std
+    # exit()
     # print('Dataset obs mean:', obs_mean, 'obs std:', obs_std)
     config_dict = dict(details['agent_kwargs'])
+    print("Mode:", details['mode'], config_dict['mode'])
     model_cls = config_dict.pop("model_cls") 
     config_dict.pop("cost_scale") 
     agent = globals()[model_cls].create(
@@ -96,7 +106,7 @@ def call_main(details, env_id):
             # eval_num += 1        
             # eval_info = evaluate(agent, env, details['eval_episodes'], save_video=True, render=True)
     else:
-        eval_info = evaluate(details['seed'], agent, env, details['eval_episodes']) #, details['agent_kwargs']['cost_limit'])
+        eval_info = evaluate(agent, env, details['eval_episodes']) #, details['agent_kwargs']['cost_limit'])
 
     # eval_info.update({f"{k}": v for k, v in offline_eval_info.items()})
     # if eval_info["cost"] == 0:
@@ -147,6 +157,7 @@ def main(_):
     elif FLAGS.mode == 4: algo = 'min'
     elif FLAGS.mode == 5: algo = 'max'
     elif FLAGS.mode == 6: algo = 'random'
+    elif FLAGS.mode == 10: algo = 'tanh'
     else: raise ValueError('Wrong mode')
     parameters['experiment_name'] = str(FLAGS.env_id) + '_' + algo + '_' + str(parameters['env_name']) + '_' + str(parameters['seed']) #str(np.random.randint(1000))
     if parameters['env_name'] == 'PointRobot':
@@ -161,8 +172,13 @@ def main(_):
         parameters['agent_kwargs']['N'] = 8
     elif FLAGS.env_id >= 21:  # Bullet safety gym envs
         parameters['agent_kwargs']['cost_limit'] = 5
+    parameters['agent_kwargs']['mode'] = FLAGS.mode
+    parameters['agent_kwargs']['cost_tau'] = FLAGS.cost_tau
+    parameters['agent_kwargs']['reward_tau'] = FLAGS.reward_tau
+    parameters['agent_kwargs']['tanh_scale'] = FLAGS.tanh_scale
+    parameters['seed'] = FLAGS.seed
+    print("Params")
     print(parameters)
-
     # if not os.path.exists(f"./results/{parameters['env_name']}/{parameters['seed']}"):
     #     os.makedirs(f"./results/{parameters['env_name']}/{parameters['seed']}")
     # with open(f"./results/{parameters['env_name']}/{parameters['seed']}/config.json", "w") as f:

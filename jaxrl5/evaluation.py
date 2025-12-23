@@ -145,6 +145,7 @@ def evaluate_md(obs_mean, obs_std, seed, env_id,  eval_num, agent, env: gym.Env,
     barriers, next_barriers = [], []
     frames_all = []
     # for _ in trange(num_episodes, desc="Evaluating", leave=False):
+    print("Num episodes", num_episodes)
     for ep_idx in trange(num_episodes, desc="Evaluating", leave=False):
         obs, info = env.reset()
         # print('Initial obs:', obs)
@@ -290,6 +291,7 @@ def evaluate_md(obs_mean, obs_std, seed, env_id,  eval_num, agent, env: gym.Env,
 def evaluate(agent, env: gym.Env, num_episodes: int, save_video: bool = False, render: bool = False) -> Dict[str, float]:
     episode_rets, episode_costs, episode_lens = [], [], []
     barriers, next_barriers = [], []
+    print()
     
     for _ in trange(num_episodes, desc="Evaluating", leave=False):
         obs, info = env.reset()

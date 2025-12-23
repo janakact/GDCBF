@@ -1,0 +1,34 @@
+program: launcher/examples/train_md.py
+method: grid
+project: tanh_sweep
+
+metric:
+  goal: maximize
+  name: n_cost
+
+parameters:
+  cost_tau:
+    values: [0.05, 0.1, 0.15, 0.2]
+  reward_tau:
+    values: [0.5, 0.55, 0.6]
+  tanh_scale:
+    values: [0.1, 0.5, 1.0]
+  seed:
+    values: [0, 10, 20]
+  env_id:
+    values: [30]
+  
+command:
+  - python
+  - launcher/examples/train_md.py
+  - --config
+  - configs/train_config.py:r
+  - --mode
+  - 10
+  - --max_steps
+  - 500001
+  - ${args}
+  # - --cost_tau
+  # - 0.1
+  # - --reward_tau
+  # - 0.55
