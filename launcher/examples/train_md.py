@@ -31,6 +31,7 @@ flags.DEFINE_integer('mode', 1, 'Mode for training')
 flags.DEFINE_float('cost_tau', 0.25, 'Cost Tau')
 flags.DEFINE_float('reward_tau', 0.6, 'Reward Tau')
 flags.DEFINE_float('tanh_scale', 1.0, 'Tanh Scale')
+flags.DEFINE_float('eval_temperature', 1.0, 'Eval Temperature')
 
 flags.DEFINE_integer('max_steps', 500_001, 'max steps')
 flags.DEFINE_integer('seed', 0, 'Seed')
@@ -176,6 +177,7 @@ def main(_):
     parameters['agent_kwargs']['cost_tau'] = FLAGS.cost_tau
     parameters['agent_kwargs']['reward_tau'] = FLAGS.reward_tau
     parameters['agent_kwargs']['tanh_scale'] = FLAGS.tanh_scale
+    parameters['agent_kwargs']['eval_temperature'] = FLAGS.eval_temperature
     parameters['seed'] = FLAGS.seed
     print("Params")
     print(parameters)

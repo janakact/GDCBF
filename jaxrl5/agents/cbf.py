@@ -51,6 +51,7 @@ class CBF(Agent):
     reward_tau: float
     cost_tau: float     
     tanh_scale: float
+    eval_temperature: float 
     action_dim: int = struct.field(pytree_node=False)
     N : int = struct.field(pytree_node=False)
     reward_temperature: float
@@ -83,6 +84,7 @@ class CBF(Agent):
         decay_steps: Optional[int] = int(2e6),
         cost_tau: float = 0.2,
         tanh_scale: float = 1.0,
+        eval_temperature: float = 1.0,
         r_min: float = -1.0,
         mode: int = 1,  # 1: 'fisor', 2: 'add', 3: 'reach'
         actor_tau: float = 0.001,
@@ -184,6 +186,7 @@ class CBF(Agent):
             reward_temperature=reward_temperature,
             cost_tau=cost_tau,
             tanh_scale=tanh_scale,
+            eval_temperature=eval_temperature,
             cost_ub=cost_ub,
             r_min=r_min,
             mode=mode,
@@ -249,7 +252,7 @@ class CBF(Agent):
         dist = self.score_model.apply_fn(
             {"params": self.score_model.params}, 
             observations_batch,
-            temperature=1 # rng doesn't matter if temperature=0, all actions will be zero. So there is not pooint sampling N actions if temp=0.
+            temperature=self.eval_temperature # rng doesn't matter if temperature=0, all actions will be zero. So there is not pooint sampling N actions if temp=0.
         )
         # actions = dist.sample(seed=key)
         actions = dist.sample(seed=key)
