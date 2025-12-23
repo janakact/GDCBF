@@ -431,6 +431,7 @@ class CBF(Agent):
 
 
     def save(self, modeldir, save_time):
+        os.makedirs(modeldir, exist_ok=True)
         file_name = 'model' + str(save_time) + '.pickle'
         state_dict = flax.serialization.to_state_dict(self)
         pickle.dump(state_dict, open(os.path.join(modeldir, file_name), 'wb'))

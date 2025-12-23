@@ -37,6 +37,7 @@ flags.DEFINE_integer('max_steps', 500_001, 'max steps')
 flags.DEFINE_integer('seed', 0, 'Seed')
 # flags.DEFINE_integer('eval', 10000, 'eval steps')
 flags.DEFINE_string('project', '081125', 'Name of the experiment')
+flags.DEFINE_string('eval_path', "", 'Provide a path to evaluate instead of training')
 # flags.DEFINE_string("config", "train_config.py:r", "Config file")
 
 config_flags.DEFINE_config_file(
@@ -84,7 +85,23 @@ def call_main(details, env_id):
     agent = globals()[model_cls].create(
         details['seed'], env.observation_space, env.action_space, **config_dict
     )
+
     save_time, eval_num = 1, 1
+
+    # Evaluation Only if eval_path is there
+    if details['eval_path']:
+        print("Eval temp", agent.eval_temperature)
+        agent = agent.load(details['eval_path'])
+        if FLAGS.env_id >= 30:
+            eval_info = evaluate_md(obs_mean, obs_std, details['seed'], env_id, eval_num, agent, env, details['eval_episodes'], render=False) #, save_video=True, )
+        else:
+            eval_info = evaluate(agent, env, eval_episodes) #, details['agent_kwargs']['cost_limit'])
+        eval_info["n_return"], eval_info["n_cost"] = env.get_normalized_score(eval_info["return"], eval_info["cost"])
+        print(eval_info)
+        wandb.log(eval_info, step=1)
+        print("Evaluation Done..!")
+        exit()
+
     avg_n_r, avg_n_c = [], []
     eval_steps = int(details['max_steps'] - 5)
     for i in trange(details['max_steps'], smoothing=0.1, desc=details['experiment_name']):
@@ -100,6 +117,8 @@ def call_main(details, env_id):
         # if i >= (eval_steps):
             
             # offline_eval_info = offline_evaluation(agent, ds, num_samples=100000, alpha=0.1, seed=details['seed'])
+
+    agent.save(f"./results/{details['env_name']}/{details['seed']}", save_time)
     if details['env_name'] == 'PointRobot':
         eval_info = evaluate_pr(agent, env, details['eval_episodes'])
     elif FLAGS.env_id >= 30:
@@ -179,6 +198,7 @@ def main(_):
     parameters['agent_kwargs']['tanh_scale'] = FLAGS.tanh_scale
     parameters['agent_kwargs']['eval_temperature'] = FLAGS.eval_temperature
     parameters['seed'] = FLAGS.seed
+    parameters['eval_path'] = FLAGS.eval_path
     print("Params")
     print(parameters)
     # if not os.path.exists(f"./results/{parameters['env_name']}/{parameters['seed']}"):

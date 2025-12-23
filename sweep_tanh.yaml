@@ -16,9 +16,9 @@ parameters:
   seed:
     values: [0, 10, 20]
   env_id:
-    values: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+    values: [30, 31, 32, 33, 34, 35, 36, 37, 38]
   eval_temperature:
-    values: [0.1, 1.0]
+    values: [0.2]
   
 command:
   - python
@@ -30,9 +30,9 @@ command:
   - --max_steps
   - 500001
   - --cost_tau
-  - 0.1
+  - 0.15
   - --reward_tau
   - 0.55
   - --tanh_scale
-  - 0.15
+  - 0.5
   - ${args}
