@@ -53,11 +53,13 @@ def to_dict(config):
         return {k: to_dict(v) for k, v in config.items()}
     return config
 
+
 def call_main(details, env_id):
     details['agent_kwargs']['cost_scale'] = details['dataset_kwargs']['cost_scale']
     print(details)
     print( "----", "\n"*2)
     config_for_wandb = to_dict(details['agent_kwargs'])
+    config_for_wandb['env_id'] = env_id
     wandb.init(project=details['project'], name=details['experiment_name'], group=details['group'], config=config_for_wandb)
     # details['agent_kwargs']['mode'] = wandb.config.mode
     if details['env_name'] == 'PointRobot':
@@ -102,6 +104,9 @@ def call_main(details, env_id):
         print("Evaluation Done..!")
         exit()
 
+    keys_to_include = ['reward_tau', 'cost_tau', 'tanh_scale', 'reward_temperature', 'eval_temperature']
+    config_key = "_".join([f"{k}{config_dict[k]}" for k in keys_to_include])
+    print("Config key", config_key)
     avg_n_r, avg_n_c = [], []
     eval_steps = int(details['max_steps'] - 5)
     for i in trange(details['max_steps'], smoothing=0.1, desc=details['experiment_name']):
@@ -118,7 +123,7 @@ def call_main(details, env_id):
             
             # offline_eval_info = offline_evaluation(agent, ds, num_samples=100000, alpha=0.1, seed=details['seed'])
 
-    agent.save(f"./results/{details['env_name']}/{details['seed']}", save_time)
+    agent.save(f"./results/{config_key}/{details['env_name']}/{details['seed']}", save_time)
     if details['env_name'] == 'PointRobot':
         eval_info = evaluate_pr(agent, env, details['eval_episodes'])
     elif FLAGS.env_id >= 30:
@@ -163,6 +168,15 @@ def main(_):
     parameters = FLAGS.config
     # config_string = str(FLAGS.config).split(':')[-1] if ':' in str(FLAGS.config) else None
     # print('Config string:', config_string)
+
+    if FLAGS.eval_path:
+        # ./results/OfflineMetadrive-easysparse-v0/20/model1.pickle
+        env_name = FLAGS.eval_path.split('/')[2] 
+        FLAGS.env_id = env_list.index(env_name)
+        print("\n", f"Evaluating for env {env_name}, {FLAGS.env_id}")
+    parameters['eval_path'] = FLAGS.eval_path
+    parameters['seed'] = FLAGS.seed
+
     env_id = FLAGS.env_id
     parameters['env_name'] = env_list[FLAGS.env_id]
     parameters['mode'] = FLAGS.mode
@@ -197,8 +211,6 @@ def main(_):
     parameters['agent_kwargs']['reward_tau'] = FLAGS.reward_tau
     parameters['agent_kwargs']['tanh_scale'] = FLAGS.tanh_scale
     parameters['agent_kwargs']['eval_temperature'] = FLAGS.eval_temperature
-    parameters['seed'] = FLAGS.seed
-    parameters['eval_path'] = FLAGS.eval_path
     print("Params")
     print(parameters)
     # if not os.path.exists(f"./results/{parameters['env_name']}/{parameters['seed']}"):
