@@ -30,3 +30,4 @@ backup/
 *.sh
 *.md
 sweep/
+results*
