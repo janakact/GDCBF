@@ -12,7 +12,9 @@ parameters:
   env_id:
     values: [30, 31, 32, 33, 34, 35, 36, 37, 38]
   mode:
-    values: [1, 10]
+    values: [10]
+  tanh_scale:
+    values: [10, 20]
 
 command:
   - python
