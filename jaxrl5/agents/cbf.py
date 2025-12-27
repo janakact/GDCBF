@@ -70,6 +70,7 @@ class CBF(Agent):
     betas: jnp.ndarray
     alphas: jnp.ndarray
     alpha_hats: jnp.ndarray
+    tanh_scale: float
     clip_sampler: bool = struct.field(pytree_node=False)
 
     @classmethod
@@ -108,6 +109,7 @@ class CBF(Agent):
         ddpm_temperature: float = 1.0,
         clip_sampler: bool = True,
         beta_schedule: str = 'vp',
+        tanh_scale: float = 5
     ):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, value_key, safe_critic_key, safe_value_key = jax.random.split(rng, 6)
@@ -223,6 +225,7 @@ class CBF(Agent):
             alphas=alphas,
             alpha_hats=alpha_hat,
             clip_sampler=clip_sampler,
+            tanh_scale=tanh_scale
         )
 
     def update_actor(agent, batch: DatasetDict) -> Tuple[Agent, Dict[str, float]]:
@@ -376,7 +379,7 @@ class CBF(Agent):
             {"params": safe_value.params}, batch["next_observations"]
         )
         
-        h_sa = batch["costs"]
+        h_sa: jax.Array = batch["costs"]
         
         if agent.mode == 1:  # FISOR
             target_qh = (1 - agent.discount) * h_sa + agent.discount * jnp.maximum(h_sa, next_vh)
@@ -407,9 +410,11 @@ class CBF(Agent):
             target_qh = jnp.min(selected,axis=0)
             # update RNG so choices change across steps
             agent = agent.replace(rng=rng)
+        elif agent.mode == 10:
+            target_qh = jnp.maximum(h_sa, agent.discount * jnp.tanh(next_vh/agent.tanh_scale)*agent.tanh_scale)
         else:
             raise ValueError(f"Unknown CBF mode: {agent.mode}")
-        target_qh = jnp.tanh(target_qh / 20) * 20
+        # target_qh = jnp.tanh(target_qh / 5) * 5
 
 
 

@@ -34,7 +34,7 @@ def get_config(config_string):
             dict(
                 agent_kwargs=dict(
                     model_cls="CBF",
-                    mode=1,  # FISOR
+                    mode=10,  # FISOR
                     cost_limit=10,
                     actor_lr=3e-4,
                     critic_lr=3e-4,
@@ -51,6 +51,7 @@ def get_config(config_string):
                     r_min=-0.001,
                     N=16,
                     discount=0.99,                    
+                    tanh_scale=5
                 ),
                 dataset_kwargs=dict(
                     **base_data_config,

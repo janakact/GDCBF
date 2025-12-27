@@ -27,6 +27,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('env_id', 23, 'Choose env')
 flags.DEFINE_float('ratio', 1.0, 'dataset ratio')
 flags.DEFINE_integer('mode', 1, 'Mode for training')
+flags.DEFINE_integer('seed', 42, 'Seed')
 flags.DEFINE_integer('max_steps', 500_001, 'max steps')
 # flags.DEFINE_integer('eval', 10000, 'eval steps')
 flags.DEFINE_string('project', '081125', 'Name of the experiment')
@@ -101,6 +102,8 @@ def call_main(details, env_id):
 def main(_):
     parameters = FLAGS.config
     env_id = FLAGS.env_id
+    parameters['agent_kwargs']['mode'] = FLAGS.mode
+    parameters['seed'] = FLAGS.seed
     # mode = FLAGS.mode
     parameters['env_name'] = env_list[env_id]    
     parameters['group'] = parameters['env_name']
