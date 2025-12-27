@@ -1,6 +1,6 @@
 program: launcher/examples/train_md.py
 method: grid
-project: tanh_sweep_compare
+project: tanh_sweep_compare_tanh_scale1
 
 metric:
   goal: maximize
