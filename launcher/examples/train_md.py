@@ -106,6 +106,7 @@ def main(_):
     parameters['agent_kwargs']['mode'] = FLAGS.mode
     parameters['agent_kwargs']['tanh_scale'] = FLAGS.tanh_scale
     parameters['agent_kwargs']['cost_scale'] = FLAGS.cost_scale
+    parameters['dataset_kwargs']['cost_scale'] = FLAGS.cost_scale # This is the primary
     parameters['max_steps']  = FLAGS.max_steps
     parameters['seed'] = FLAGS.seed
     # mode = FLAGS.mode
