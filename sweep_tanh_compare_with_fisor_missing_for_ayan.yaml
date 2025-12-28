@@ -1,6 +1,6 @@
 program: launcher/examples/train_md.py
 method: grid
-project: tanh_sweep_compare_tanh_scale1
+project: tanh_sweep_compare_tanh_missing
 
 metric:
   goal: maximize
@@ -10,13 +10,15 @@ parameters:
   seed:
     values: [0, 10, 20]
   env_id:
-    # values: []
-    values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] # SG
+    values: [1, 5, 7]
+    # values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] # SG
     # values: [30, 31, 32, 33, 34, 35, 36, 37, 38] Meta
   mode:
-    values: [10, 11]
+    values: [11]
   tanh_scale:
-    values: [100]
+    values: [20]
+  cost_scale:
+    values: [1]
 
 command:
   - python

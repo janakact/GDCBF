@@ -27,7 +27,8 @@ flags.DEFINE_integer('env_id', 23, 'Choose env')
 flags.DEFINE_float('ratio', 1.0, 'dataset ratio')
 flags.DEFINE_integer('mode', 1, 'Mode for training')
 flags.DEFINE_integer('seed', 42, 'Seed')
-flags.DEFINE_float('tanh_scale', 5.0, 'Tanh Scale')
+flags.DEFINE_float('tanh_scale', 100.0, 'Tanh Scale')
+flags.DEFINE_float('cost_scale', 25.0, 'Cost Scale')
 flags.DEFINE_integer('max_steps', 500_001, 'max steps')
 # flags.DEFINE_integer('eval', 10000, 'eval steps')
 flags.DEFINE_string('project', '081125', 'Name of the experiment')
@@ -104,6 +105,7 @@ def main(_):
     env_id = FLAGS.env_id
     parameters['agent_kwargs']['mode'] = FLAGS.mode
     parameters['agent_kwargs']['tanh_scale'] = FLAGS.tanh_scale
+    parameters['agent_kwargs']['cost_scale'] = FLAGS.cost_scale
     parameters['max_steps']  = FLAGS.max_steps
     parameters['seed'] = FLAGS.seed
     # mode = FLAGS.mode
