@@ -13,8 +13,7 @@ import yaml
 from ml_collections import config_flags, ConfigDict
 import wandb
 from tqdm.auto import trange  # noqa
-# import gymnasium as gym
-import gym
+from env.rl_compat import gym
 from env.env_list import env_list
 from env.point_robot import PointRobot
 from jaxrl5.wrappers import wrap_gym
@@ -91,7 +90,7 @@ def call_main(details, env_id):
             # eval_num += 1        
             # eval_info = evaluate(agent, env, details['eval_episodes'], save_video=True, render=True)
     else:
-        eval_info = evaluate(details['seed'], agent, env, details['eval_episodes']) #, details['agent_kwargs']['cost_limit'])
+        eval_info = evaluate(obs_mean, obs_std, agent, env, details['eval_episodes']) #, details['agent_kwargs']['cost_limit'])
 
     if details['env_name'] != 'PointRobot':
         eval_info["n_return"], eval_info["n_cost"] = env.get_normalized_score(eval_info["return"], eval_info["cost"])
@@ -105,6 +104,7 @@ def main(_):
     env_id = FLAGS.env_id
     parameters['agent_kwargs']['mode'] = FLAGS.mode
     parameters['agent_kwargs']['tanh_scale'] = FLAGS.tanh_scale
+    parameters['max_steps']  = FLAGS.max_steps
     parameters['seed'] = FLAGS.seed
     # mode = FLAGS.mode
     parameters['env_name'] = env_list[env_id]    

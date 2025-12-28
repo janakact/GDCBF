@@ -14,7 +14,7 @@ parameters:
   mode:
     values: [10]
   tanh_scale:
-    values: [10, 20]
+    values: [200, 100, 50]
 
 command:
   - python

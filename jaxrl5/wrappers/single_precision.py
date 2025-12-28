@@ -1,11 +1,6 @@
 import copy
-
-import gym
-from gym.spaces import Box, Dict
-
-# import gymnasium as gym
-# from gymnasium.spaces import Box, Dict
-
+from env.rl_compat import gym,spaces
+Box, Dict = spaces.Box, spaces.Dict
 import numpy as np
 
 

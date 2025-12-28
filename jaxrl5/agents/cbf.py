@@ -4,7 +4,7 @@ from functools import partial
 from typing import Dict, Optional, Sequence, Tuple, Union, Any
 import flax.linen as nn
 from flax.core import FrozenDict
-import gym 
+from env.rl_compat import spaces
 import jax
 import jax.numpy as jnp
 import optax
@@ -77,8 +77,8 @@ class CBF(Agent):
     def create(
         cls,
         seed: int,
-        observation_space: gym.spaces.Space,
-        action_space: gym.spaces.Box,
+        observation_space: spaces.Space,
+        action_space: spaces.Box,
         actor_lr: Union[float, optax.Schedule] = 3e-4,
         critic_lr: float = 3e-4,
         value_lr: float = 3e-4,
@@ -412,9 +412,11 @@ class CBF(Agent):
             agent = agent.replace(rng=rng)
         elif agent.mode == 10:
             target_qh = jnp.maximum(h_sa, agent.discount * jnp.tanh(next_vh/agent.tanh_scale)*agent.tanh_scale)
+        elif agent.mode == 11:
+            target_qh = (1 - agent.discount) * h_sa + agent.discount * jnp.maximum(h_sa, next_vh)
+            target_qh = jnp.tanh(target_qh/agent.tanh_scale)*agent.tanh_scale
         else:
             raise ValueError(f"Unknown CBF mode: {agent.mode}")
-        # target_qh = jnp.tanh(target_qh / 5) * 5
 
 
 

@@ -5,7 +5,7 @@ import os
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 import pygame
 pygame.init()
-import gymnasium as gym
+from env.rl_compat import gym
 import numpy as np
 import jax
 import jax.numpy as jnp
@@ -287,12 +287,14 @@ def evaluate_md(obs_mean, obs_std, seed, env_id,  eval_num, agent, env: gym.Env,
         # "validity": validity,
     }
 
-def evaluate(agent, env: gym.Env, num_episodes: int, save_video: bool = False, render: bool = False) -> Dict[str, float]:
+def evaluate(obs_mean, obs_std, agent, env: gym.Env, num_episodes: int, save_video: bool = False, render: bool = False) -> Dict[str, float]:
     episode_rets, episode_costs, episode_lens = [], [], []
     barriers, next_barriers = [], []
     
     for _ in trange(num_episodes, desc="Evaluating", leave=False):
         obs, info = env.reset()
+        if obs_mean is not None and obs_std is not None:
+            obs = (obs - obs_mean) / (obs_std)
         episode_ret, episode_cost, episode_len = 0.0, 0.0, 0
         
         while True:
@@ -312,6 +314,8 @@ def evaluate(agent, env: gym.Env, num_episodes: int, save_video: bool = False, r
             barriers.append(barrier_value)
             
             next_obs, reward, terminated, truncated, info = env.step(action)
+            if obs_mean is not None and obs_std is not None:
+                next_obs = (next_obs - obs_mean) / (obs_std)
             
             # next_barrier_value = agent.safe_value.apply_fn(
             #     {"params": agent.safe_value.params},
