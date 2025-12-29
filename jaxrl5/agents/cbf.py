@@ -415,6 +415,8 @@ class CBF(Agent):
         elif agent.mode == 11:
             target_qh = (1 - agent.discount) * h_sa + agent.discount * jnp.maximum(h_sa, next_vh)
             target_qh = jnp.tanh(target_qh/agent.tanh_scale)*agent.tanh_scale
+        elif agent.mode == 12:
+            target_qh = h_sa + agent.discount * jnp.tanh(next_vh/agent.tanh_scale)*agent.tanh_scale
         else:
             raise ValueError(f"Unknown CBF mode: {agent.mode}")
 
