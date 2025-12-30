@@ -1,6 +1,6 @@
 program: launcher/examples/train_md.py
 method: grid
-project: tanh_sweep_compare_tanh_scale1
+project: tanh_12
 
 metric:
   goal: maximize
@@ -11,16 +11,17 @@ parameters:
     values: [0, 10, 20]
   env_id:
     # values: []
-    # values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] # SG
-    values: [30, 31, 32, 33, 34, 35, 36, 37, 38] # Meta
+    values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] # SG
+    # values: [30, 31, 32, 33, 34, 35, 36, 37, 38] # Meta
   mode:
     values: [12]
   tanh_scale:
-    values: [100]
+    values: [100, 250]
   cost_scale:
     values: [25]
 
 command:
+  - ${env}
   - python
   - launcher/examples/train_md.py
   - --config
@@ -29,6 +30,7 @@ command:
   - 500001
   - ${args}
 
+# - RL_LIB=gym
 # Comments
   # cost_tau:
   #   values: [0.1, 0.2]
