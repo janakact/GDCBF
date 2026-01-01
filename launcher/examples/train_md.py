@@ -29,6 +29,8 @@ flags.DEFINE_integer('mode', 1, 'Mode for training')
 flags.DEFINE_integer('seed', 42, 'Seed')
 flags.DEFINE_float('tanh_scale', 100.0, 'Tanh Scale')
 flags.DEFINE_float('cost_scale', 25.0, 'Cost Scale')
+flags.DEFINE_float('cost_tau', 0.15, 'Cost Tau')
+flags.DEFINE_float('reward_tau', 0.75, 'Reward Tau')
 flags.DEFINE_integer('max_steps', 500_001, 'max steps')
 # flags.DEFINE_integer('eval', 10000, 'eval steps')
 flags.DEFINE_string('project', '081125', 'Name of the experiment')
@@ -106,6 +108,8 @@ def main(_):
     parameters['agent_kwargs']['mode'] = FLAGS.mode
     parameters['agent_kwargs']['tanh_scale'] = FLAGS.tanh_scale
     parameters['agent_kwargs']['cost_scale'] = FLAGS.cost_scale
+    parameters['agent_kwargs']['cost_tau'] = FLAGS.cost_tau
+    parameters['agent_kwargs']['reward_tau'] = FLAGS.reward_tau
     parameters['dataset_kwargs']['cost_scale'] = FLAGS.cost_scale # This is the primary
     parameters['max_steps']  = FLAGS.max_steps
     parameters['seed'] = FLAGS.seed
