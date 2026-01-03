@@ -82,8 +82,10 @@ def call_main(details, env_id):
     )
     save_time, eval_num = 1, 1
     for i in trange(details['max_steps'], smoothing=0.1, desc=details['experiment_name']):
-        sample = ds.sample_jax(details['batch_size'])     
-        agent, info = agent.update(sample)
+        # batch_size = max(agent.batch_size, agent.actor_batch_size)
+        sample = ds.sample_jax(agent.batch_size)     
+        sample_actor = ds.sample_jax(agent.actor_batch_size)     
+        agent, info = agent.update(sample, sample_actor)
         if i % details['log_interval'] == 0:
             wandb.log({f"train/{k}": v for k, v in info.items()}, step=i)
     if details['env_name'] == 'PointRobot':

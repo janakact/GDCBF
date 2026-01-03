@@ -58,6 +58,7 @@ class CBF(Agent):
     action_dim: int = struct.field(pytree_node=False)
     N : int = struct.field(pytree_node=False)
     reward_temperature: float
+    cost_temperature: float
     cost_ub: float
     r_min: float 
     mode:int = struct.field(pytree_node=False)  # 1: 'fisor', 2: 'add', 3: 'reach'
@@ -72,6 +73,8 @@ class CBF(Agent):
     alpha_hats: jnp.ndarray
     tanh_scale: float
     clip_sampler: bool = struct.field(pytree_node=False)
+    batch_size: int = 256
+    actor_batch_size: int = 2048
 
     @classmethod
     def create(
@@ -93,6 +96,7 @@ class CBF(Agent):
         value_layer_norm: bool = False,
         critic_layer_norm: bool = True,
         reward_temperature: float = 3.0,
+        cost_temperature: float = 3.0,
         cost_ub: float = 150.0,
         N: int = 64,
         decay_steps: Optional[int] = int(2e6),
@@ -211,6 +215,7 @@ class CBF(Agent):
             N=N,
             reward_tau=reward_tau,
             reward_temperature=reward_temperature,
+            cost_temperature=cost_temperature,
             cost_tau=cost_tau,
             cost_ub=cost_ub,
             r_min=r_min,
@@ -250,17 +255,31 @@ class CBF(Agent):
         '''
         cost reward
         '''
-        qcs = agent.safe_target_critic.apply_fn(
+        qc = agent.safe_target_critic.apply_fn(
             {"params": agent.safe_target_critic.params},
             batch["observations"],
             batch["actions"],
         )
+        vc = agent.safe_value.apply_fn(
+                {"params": agent.safe_value.params}, batch["observations"]
+            )
 
+
+        eps = 0.
+        unsafe_condition = jnp.where( vc >  0. - eps, 1, 0)
+        safe_condition = jnp.where(vc <= 0. - eps, 1, 0) * jnp.where(qc<=0. - eps, 1, 0)
         
-        reward_adv = q - v
-        reward_weights = jnp.exp(reward_adv * agent.reward_temperature)
-        reward_weights = jnp.clip(reward_weights, 0, 100)
-        weights = reward_weights 
+        cost_exp_adv = jnp.exp((vc-qc) * agent.cost_temperature)
+        reward_exp_adv = jnp.exp((q - v) * agent.reward_temperature)
+        
+        unsafe_weights = unsafe_condition * jnp.clip(cost_exp_adv, 0, agent.cost_ub) ## ignore vc >0, qc>vc
+        safe_weights = safe_condition * jnp.clip(reward_exp_adv, 0, 100)
+        
+        weights = unsafe_weights + safe_weights 
+        # reward_adv = q - v
+        # reward_weights = jnp.exp(reward_adv * agent.reward_temperature)
+        # reward_weights = jnp.clip(reward_weights, 0, 100)
+        # weights = reward_weights
 
         def actor_loss_fn(score_model_params):
             eps_pred = agent.score_model.apply_fn({'params': score_model_params},
@@ -450,12 +469,17 @@ class CBF(Agent):
         return new_agent, {**vh_info, **qh_info}
 
 
+    def split_batch(agent, batch):
+        critic_batch = jax.tree_map(lambda x: x[:agent.batch_size], batch) 
+        actor_batch = jax.tree_map(lambda x: x[:agent.actor_batch_size], batch)
+        return agent, critic_batch,actor_batch
+
     @jax.jit
-    def update(self, batch: DatasetDict):
+    def update(self, critic_batch: DatasetDict, actor_batch:DatasetDict):
         new_agent = self
-        new_agent, h_info = new_agent.update_h(batch)        
-        new_agent, r_info = new_agent.update_r(batch)
-        new_agent, actor_info = new_agent.update_actor(batch)
+        new_agent, h_info = new_agent.update_h(critic_batch)        
+        new_agent, r_info = new_agent.update_r(critic_batch)
+        new_agent, actor_info = new_agent.update_actor(actor_batch)
         info = {
             **h_info,
             **r_info,

@@ -76,6 +76,7 @@ class DDPM(nn.Module):
         time = time.reshape(a.shape[0], -1)  # (B, 1) shape check, make sure that time has the same dimension as s and a
         t_ff = self.time_preprocess_cls()(time)
         cond = self.cond_encoder_cls()(t_ff, training=training)
+        # jax.debug.print("{a}:{s}:{cond}", a=a.shape, s=s.shape, cond=cond.shape)
         reverse_input = jnp.concatenate([a, s, cond], axis=-1)
 
         return self.reverse_encoder_cls()(reverse_input, training=training)
