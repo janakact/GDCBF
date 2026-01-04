@@ -51,7 +51,8 @@ def get_config(config_string):
                     r_min=-0.001,
                     N=16,
                     discount=0.99,                    
-                    tanh_scale=1.0
+                    tanh_scale=1.0,
+                    vh_clip=50
                 ),
                 dataset_kwargs=dict(
                     **base_data_config,

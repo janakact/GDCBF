@@ -72,6 +72,7 @@ class CBF(Agent):
     alphas: jnp.ndarray
     alpha_hats: jnp.ndarray
     tanh_scale: float
+    vh_clip: float
     clip_sampler: bool = struct.field(pytree_node=False)
     batch_size: int = 256
     actor_batch_size: int = 2048
@@ -113,7 +114,8 @@ class CBF(Agent):
         ddpm_temperature: float = 1.0,
         clip_sampler: bool = True,
         beta_schedule: str = 'vp',
-        tanh_scale: float = 5
+        tanh_scale: float = 5,
+        vh_clip: float = 50
     ):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, value_key, safe_critic_key, safe_value_key = jax.random.split(rng, 6)
@@ -230,7 +232,8 @@ class CBF(Agent):
             alphas=alphas,
             alpha_hats=alpha_hat,
             clip_sampler=clip_sampler,
-            tanh_scale=tanh_scale
+            tanh_scale=tanh_scale,
+            vh_clip=vh_clip,
         )
 
     def update_actor(agent, batch: DatasetDict) -> Tuple[Agent, Dict[str, float]]:
@@ -436,6 +439,8 @@ class CBF(Agent):
             target_qh = jnp.tanh(target_qh/agent.tanh_scale)*agent.tanh_scale
         elif agent.mode == 12:
             target_qh = h_sa + agent.discount * jnp.tanh(next_vh/agent.tanh_scale)*agent.tanh_scale
+        elif agent.mode == 13: # Clipped discount sum
+            target_qh = h_sa + jnp.clip(agent.discount * next_vh, a_max=agent.vh_clip, a_min=-agent.vh_clip)
         else:
             raise ValueError(f"Unknown CBF mode: {agent.mode}")
 
