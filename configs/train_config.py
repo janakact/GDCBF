@@ -52,7 +52,7 @@ def get_config(config_string):
                     N=16,
                     discount=0.99,                    
                     tanh_scale=1.0,
-                    vh_clip=50
+                    vh_clip=25
                 ),
                 dataset_kwargs=dict(
                     **base_data_config,
