@@ -23,6 +23,11 @@ from jaxrl5.networks import DDPM, FourierFeatures, cosine_beta_schedule, ddpm_sa
 def expectile_loss(diff, expectile=0.8):
     weight = jnp.where(diff > 0, expectile, (1 - expectile))
     return weight * (diff**2)
+
+def quantile_loss(diff, expectile=0.8):
+    weight = jnp.where(diff > 0, expectile, (1 - expectile))
+    return weight * jnp.abs(diff)
+
 def safe_expectile_loss(diff, expectile=0.8):
     weight = jnp.where(diff < 0, expectile, (1 - expectile))
     return weight * (diff**2)
@@ -444,7 +449,7 @@ class CBF(Agent):
             target_qh = h_sa + agent.discount * jnp.tanh(next_vh/agent.tanh_scale)*agent.tanh_scale
         elif agent.mode == 13: # Clipped discount sum
             target_qh = h_sa + jnp.clip(agent.discount * next_vh, a_max=agent.vh_clip, a_min=-agent.vh_clip)
-        elif agent.mode == 14:  # Taking the max over s', Target is same as FISOR but use expectile later
+        elif agent.mode == 14 or agent.mode == 15:  # Taking the max over s', Target is same as FISOR but use expectile later
             target_qh = (1 - agent.discount) * h_sa + agent.discount * jnp.maximum(h_sa, next_vh)
         else:
             raise ValueError(f"Unknown CBF mode: {agent.mode}")
@@ -459,6 +464,8 @@ class CBF(Agent):
             # TD
             if agent.mode == 14:
                 qh_loss = expectile_loss(qhs - target_qh, agent.transition_tau).mean()
+            elif agent.mode == 15:
+                qh_loss = quantile_loss(qhs - target_qh, agent.transition_tau).mean()
             else:
                 qh_loss = jnp.abs(qhs - target_qh).mean()
 
