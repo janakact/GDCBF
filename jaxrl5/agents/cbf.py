@@ -117,7 +117,7 @@ class CBF(Agent):
         beta_schedule: str = 'vp',
         tanh_scale: float = 5,
         vh_clip: float = 50,
-        transition_tau: float = 0.75
+        transition_tau: float = None
     ):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, value_key, safe_critic_key, safe_value_key = jax.random.split(rng, 6)
