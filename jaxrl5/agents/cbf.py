@@ -73,6 +73,7 @@ class CBF(Agent):
     alpha_hats: jnp.ndarray
     tanh_scale: float
     vh_clip: float
+    transition_tau: float
     clip_sampler: bool = struct.field(pytree_node=False)
     batch_size: int = 256
     actor_batch_size: int = 2048
@@ -115,7 +116,8 @@ class CBF(Agent):
         clip_sampler: bool = True,
         beta_schedule: str = 'vp',
         tanh_scale: float = 5,
-        vh_clip: float = 50
+        vh_clip: float = 50,
+        transition_tau: float = 0.75
     ):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, value_key, safe_critic_key, safe_value_key = jax.random.split(rng, 6)
@@ -234,6 +236,7 @@ class CBF(Agent):
             clip_sampler=clip_sampler,
             tanh_scale=tanh_scale,
             vh_clip=vh_clip,
+            transition_tau=transition_tau,
         )
 
     def update_actor(agent, batch: DatasetDict) -> Tuple[Agent, Dict[str, float]]:
@@ -441,6 +444,8 @@ class CBF(Agent):
             target_qh = h_sa + agent.discount * jnp.tanh(next_vh/agent.tanh_scale)*agent.tanh_scale
         elif agent.mode == 13: # Clipped discount sum
             target_qh = h_sa + jnp.clip(agent.discount * next_vh, a_max=agent.vh_clip, a_min=-agent.vh_clip)
+        elif agent.mode == 14:  # Taking the max over s', Target is same as FISOR but use expectile later
+            target_qh = (1 - agent.discount) * h_sa + agent.discount * jnp.maximum(h_sa, next_vh)
         else:
             raise ValueError(f"Unknown CBF mode: {agent.mode}")
 
@@ -452,7 +457,10 @@ class CBF(Agent):
                 batch["observations"], batch["actions"]
             )
             # TD
-            qh_loss = jnp.abs(qhs - target_qh).mean()
+            if agent.mode == 14:
+                qh_loss = expectile_loss(qhs - target_qh, agent.transition_tau).mean()
+            else:
+                qh_loss = jnp.abs(qhs - target_qh).mean()
 
             return qh_loss, {"qh_loss": qh_loss, "q_h": qhs.mean()}
         
