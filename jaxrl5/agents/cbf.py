@@ -463,9 +463,9 @@ class CBF(Agent):
             )
             # TD
             if agent.mode == 14:
-                qh_loss = expectile_loss(qhs - target_qh, agent.transition_tau).mean()
+                qh_loss = expectile_loss(target_qh - qhs, agent.transition_tau).mean()
             elif agent.mode == 15:
-                qh_loss = quantile_loss(qhs - target_qh, agent.transition_tau).mean()
+                qh_loss = quantile_loss(target_qh - qhs, agent.transition_tau).mean()
             else:
                 qh_loss = jnp.abs(qhs - target_qh).mean()
 
