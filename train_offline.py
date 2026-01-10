@@ -83,22 +83,23 @@ def call_main(details, env_id):
         if i % details['log_interval'] == 0:
             wandb.log({f"train/{k}": v for k, v in info.items()}, step=i)
         # if i >= (details['max_steps']-20):
-        # if i % details['eval_interval'] == 0:
-    if details['env_name'] == 'PointRobot':
-        eval_info = evaluate_pr(agent, env, details['eval_episodes'])
-    # elif env_id >= 30:
-    #     eval_info = evaluate_md(obs_mean, obs_std, details['seed'], env_id, eval_num, agent, env, details['eval_episodes'], render=False) #, save_video=True, )
-    #         # eval_num += 1        
-            # eval_info = evaluate(agent, env, details['eval_episodes'], save_video=True, render=True)
-    else:
-        eval_info = evaluate(details['seed'], agent, env, details['eval_episodes']) #, details['agent_kwargs']['cost_limit'])
+        is_last = i == details['max_steps']-1
+        if i % details['eval_interval'] == 0 or is_last:
+            if details['env_name'] == 'PointRobot':
+                eval_info = evaluate_pr(agent, env, details['eval_episodes'])
+            # elif env_id >= 30:
+            #     eval_info = evaluate_md(obs_mean, obs_std, details['seed'], env_id, eval_num, agent, env, details['eval_episodes'], render=False) #, save_video=True, )
+            #         # eval_num += 1        
+                    # eval_info = evaluate(agent, env, details['eval_episodes'], save_video=True, render=True)
+            else:
+                eval_info = evaluate(details['seed'], agent, env, details['eval_episodes']) #, details['agent_kwargs']['cost_limit'])
 
-    if details['env_name'] != 'PointRobot':
-        eval_info["n_return"], eval_info["n_cost"] = env.get_normalized_score(eval_info["return"], eval_info["cost"])
-    
-    # print ({f"eval/{k}": v for k, v in eval_info.items()})
-    wandb.log({f"{k}": v for k, v in eval_info.items()} , step=i)        
-    # wandb.log({f"{k}": v for k, v in eval_info.items()} )
+            if details['env_name'] != 'PointRobot':
+                eval_info["n_return"], eval_info["n_cost"] = env.get_normalized_score(eval_info["return"], eval_info["cost"])
+            
+            # print ({f"eval/{k}": v for k, v in eval_info.items()})
+            wandb.log({f"{k}": v for k, v in eval_info.items()} , step=i)        
+            # wandb.log({f"{k}": v for k, v in eval_info.items()} )
 
 
 def main(_):

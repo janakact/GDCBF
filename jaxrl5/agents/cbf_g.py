@@ -187,8 +187,8 @@ class CBF(Agent):
         )
 
     def update_actor(agent, batch: DatasetDict) -> Tuple[Agent, Dict[str, float]]:
-        # rng = agent.rng
-        # key, rng = jax.random.split(rng, 2)
+        
+        # Compute weights as before (reward_adv, etc.)
         qs = agent.target_critic.apply_fn({"params": agent.target_critic.params}, 
                                           batch["observations"], 
                                           batch["actions"])
@@ -198,17 +198,28 @@ class CBF(Agent):
         '''
         cost reward
         '''
-        qcs = agent.safe_target_critic.apply_fn(
+        qc = agent.safe_target_critic.apply_fn(
             {"params": agent.safe_target_critic.params},
             batch["observations"],
             batch["actions"],
         )
+        vc = agent.safe_value.apply_fn(
+                {"params": agent.safe_value.params}, batch["observations"]
+            )
 
+
+        eps = 0.
+        unsafe_condition = jnp.where( vc >  0. - eps, 1, 0)
+        safe_condition = jnp.where(vc <= 0. - eps, 1, 0) * jnp.where(qc<=0. - eps, 1, 0)
         
-        reward_adv = q - v
-        reward_weights = jnp.exp(reward_adv * agent.reward_temperature)
-        reward_weights = jnp.clip(reward_weights, 0, 100)
-        weights = reward_weights 
+        cost_exp_adv = jnp.exp((vc-qc) * 5) # Set cost temp to 5
+        reward_exp_adv = jnp.exp((q - v) * agent.reward_temperature)
+        
+        unsafe_weights = unsafe_condition * jnp.clip(cost_exp_adv, 0, agent.cost_ub) ## ignore vc >0, qc>vc
+        safe_weights = safe_condition * jnp.clip(reward_exp_adv, 0, 100)
+        
+        weights = unsafe_weights + safe_weights 
+
     
 
         def actor_loss_fn(actor_params: FrozenDict[str, Any]):

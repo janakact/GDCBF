@@ -8,9 +8,9 @@ def get_config(config_string):
         seed=-1,
         max_steps=500_001,
         eval_episodes=20,
-        batch_size=2048, #Actor batch size x 2 (so really 1024), critic is fixed to 256
+        batch_size=512, #Actor batch size x 2 (so really 1024), critic is fixed to 256
         log_interval=1_000,
-        eval_interval=250_000,
+        eval_interval=100_000,
         normalize_returns=True,
     )
 
