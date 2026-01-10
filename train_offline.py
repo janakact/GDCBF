@@ -27,11 +27,13 @@ FLAGS = flags.FLAGS
 # flags.DEFINE_string("config", "train_config.py:r", "Config file")
 flags.DEFINE_integer('env_id', 23, 'Choose env')
 # flags.DEFINE_float('ratio', 1.0, 'dataset ratio')
-# flags.DEFINE_integer('mode', 1, 'Mode for training')
+flags.DEFINE_integer('mode', 1, 'Mode for training')
 flags.DEFINE_integer('seed', 1, 'Seed')
+flags.DEFINE_float('eval_temperature', 0.0, 'Temperature for evaluation')
 # flags.DEFINE_integer('max_steps', 500_001, 'max steps')
 # flags.DEFINE_integer('eval', 10000, 'eval steps')
 flags.DEFINE_string('project', '081125', 'Name of the experiment')
+flags.DEFINE_float('transition_tau', 0.5, 'Transition tau for CBF')
 
 config_flags.DEFINE_config_file(
     "config",
@@ -105,7 +107,8 @@ def call_main(details, env_id):
 def main(_):
     parameters = FLAGS.config
     env_id = FLAGS.env_id
-    # parameters['agent_kwargs']['mode'] = FLAGS.mode
+    parameters['agent_kwargs']['mode'] = FLAGS.mode
+    parameters['agent_kwargs']['eval_temperature'] = FLAGS.eval_temperature
     parameters['seed'] = FLAGS.seed
     # mode = FLAGS.mode
     algo = 'fisor' #if mode == 1 else 'tanh'
@@ -115,6 +118,8 @@ def main(_):
     parameters['group'] = parameters['env_name']
     # parameters['experiment_name'] = str(env_id) + '_'  + str(parameters['env_name']) + '_' + str(parameters['dataset_kwargs']['seed']) #str(np.random.randint(1000))
     parameters['experiment_name'] = str(env_id) + '_' + algo + '_' + str(parameters['env_name']) + '_' + str(parameters['seed']) #str(np.random.randint(1000))
+    parameters['agent_kwargs']['transition_tau'] = FLAGS.transition_tau
+    
     
     if env_id >= 21:  # Bullet safety gym envs
         parameters['agent_kwargs']['cost_limit'] = 5

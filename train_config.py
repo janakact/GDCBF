@@ -40,6 +40,7 @@ def get_config(config_string):
                     value_lr=3e-4,
                     # cost_temperature=5,
                     reward_temperature=3,
+                    eval_temperature=0.0,
                     # T=5,
                     N=16,
                     # M=0,
@@ -64,7 +65,7 @@ def get_config(config_string):
 
                     r_min=-0.001,
                     # tanh_scale = 5.0,           
-                    # mode=1,  # FISOR
+                    mode=1,  # FISOR
 
                 ),
                 dataset_kwargs=dict(

@@ -53,8 +53,10 @@ class CBF(Agent):
     action_dim: int = struct.field(pytree_node=False)
     N : int = struct.field(pytree_node=False)
     reward_temperature: float
+    eval_temperature: float
     cost_ub: float
     r_min: float 
+    transition_tau: float 
     mode:int = struct.field(pytree_node=False)  # 1: 'fisor', 2: 'add', 3: 'reach'
 
     @classmethod
@@ -77,6 +79,7 @@ class CBF(Agent):
         value_layer_norm: bool = False,
         critic_layer_norm: bool = True,
         reward_temperature: float = 3.0,
+        eval_temperature: float = 0.0,
         cost_ub: float = 150.0,
         N: int = 64,
         decay_steps: Optional[int] = int(2e6),
@@ -85,6 +88,7 @@ class CBF(Agent):
         mode: int = 1,  # 1: 'fisor', 2: 'add', 3: 'reach'
         actor_tau: float = 0.001,
         cost_limit: float = 10,
+        transition_tau: float = 0.6
     ):
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, value_key, safe_critic_key, safe_value_key = jax.random.split(rng, 6)
@@ -179,11 +183,13 @@ class CBF(Agent):
             N=N,
             reward_tau=reward_tau,
             reward_temperature=reward_temperature,
+            eval_temperature=eval_temperature,
             cost_tau=cost_tau,
             cost_ub=cost_ub,
             r_min=r_min,
             mode=mode,
             actor_tau=actor_tau,
+            transition_tau=transition_tau,
         )
 
     def update_actor(agent, batch: DatasetDict) -> Tuple[Agent, Dict[str, float]]:
@@ -256,7 +262,7 @@ class CBF(Agent):
         dist = self.score_model.apply_fn(
             {"params": self.score_model.params}, 
             observations_batch,
-            temperature=0.1 # rng doesn't matter if temperature=0
+            temperature=self.eval_temperature # rng doesn't matter if temperature=0
         )
         actions = dist.sample(seed=key)
         # actions = dist.sample(seed=self.rng)
@@ -355,7 +361,7 @@ class CBF(Agent):
         
         h_sa = batch["costs"]
         
-        if agent.mode == 1:  # FISOR
+        if agent.mode == 1 or agent.mode==14 or agent.mode==15:  # FISOR
             target_qh = (1 - agent.discount) * h_sa + agent.discount * jnp.maximum(h_sa, next_vh)
         elif agent.mode == 2:  # Value-as-Barrier (Additive Bellman)
             target_qh = h_sa + agent.discount * next_vh - (1 - agent.discount) * 0.6
@@ -396,7 +402,11 @@ class CBF(Agent):
                 batch["observations"], batch["actions"]
             )
             # TD
+            if agent.mode == 14:
+                qh_loss = expectile_loss(target_qh - qhs, agent.transition_tau).mean()
+
             qh_loss = jnp.abs(qhs - target_qh).mean()
+            
 
             return qh_loss, {"qh_loss": qh_loss, "q_h": qhs.mean()}
         
