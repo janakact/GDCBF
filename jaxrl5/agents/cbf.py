@@ -126,6 +126,8 @@ class CBF(Agent):
         critic_layer_norm: bool = False,
         cbf_lr: float = 3e-4,
     ):
+        print("Wrong file")
+        exit()
         rng = jax.random.PRNGKey(seed)
         rng, actor_key, critic_key, value_key, safe_critic_key, safe_value_key = jax.random.split(rng, 6)
         actions = action_space.sample()

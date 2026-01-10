@@ -27,7 +27,8 @@ FLAGS = flags.FLAGS
 # flags.DEFINE_string("config", "train_config.py:r", "Config file")
 flags.DEFINE_integer('env_id', 23, 'Choose env')
 # flags.DEFINE_float('ratio', 1.0, 'dataset ratio')
-flags.DEFINE_integer('mode', 1, 'Mode for training')
+# flags.DEFINE_integer('mode', 1, 'Mode for training')
+flags.DEFINE_integer('seed', 1, 'Seed')
 # flags.DEFINE_integer('max_steps', 500_001, 'max steps')
 # flags.DEFINE_integer('eval', 10000, 'eval steps')
 flags.DEFINE_string('project', '081125', 'Name of the experiment')
@@ -51,7 +52,6 @@ def call_main(details, env_id):
     config_for_wandb = to_dict(details['agent_kwargs'])
     wandb.init(project=details['project'], name=details['experiment_name'], group=details['group'], config=config_for_wandb)
     # wandb.init( name=details['experiment_name'], group=details['group'], config=config_for_wandb)
-    # details['agent_kwargs']['mode'] = wandb.config.mode
     if details['env_name'] == 'PointRobot':
         assert details['dataset_kwargs']['pr_data'] is not None, "No data for Point Robot"
         env = eval(details['env_name'])(id=0, seed=0)
@@ -104,6 +104,8 @@ def call_main(details, env_id):
 def main(_):
     parameters = FLAGS.config
     env_id = FLAGS.env_id
+    # parameters['agent_kwargs']['mode'] = FLAGS.mode
+    parameters['seed'] = FLAGS.seed
     # mode = FLAGS.mode
     algo = 'fisor' #if mode == 1 else 'tanh'
     # algo = 'tanh'
