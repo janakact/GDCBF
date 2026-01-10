@@ -42,7 +42,7 @@ def get_config(config_string):
                     reward_temperature=3,
                     eval_temperature=0.0,
                     # T=5,
-                    N=16,
+                    N=1, # Since temp is zero
                     # M=0,
                     # clip_sampler=True,
                     # actor_dropout_rate=0.1,

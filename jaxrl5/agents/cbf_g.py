@@ -21,6 +21,9 @@ from jaxrl5.networks import MLP, Ensemble, StateActionValue, StateValue,get_weig
 def expectile_loss(diff, expectile=0.8):
     weight = jnp.where(diff > 0, expectile, (1 - expectile))
     return weight * (diff**2)
+def percentile_loss(diff, expectile=0.8):
+    weight = jnp.where(diff > 0, expectile, (1 - expectile))
+    return weight * jnp.abs(diff)
 def safe_expectile_loss(diff, expectile=0.8):
     weight = jnp.where(diff < 0, expectile, (1 - expectile))
     return weight * (diff**2)
@@ -404,9 +407,10 @@ class CBF(Agent):
             # TD
             if agent.mode == 14:
                 qh_loss = expectile_loss(target_qh - qhs, agent.transition_tau).mean()
-
-            qh_loss = jnp.abs(qhs - target_qh).mean()
-            
+            elif agent.mode == 15:
+                qh_loss = percentile_loss(target_qh - qhs, agent.transition_tau).mean()
+            else:
+                qh_loss = jnp.abs(qhs - target_qh).mean()
 
             return qh_loss, {"qh_loss": qh_loss, "q_h": qhs.mean()}
         
