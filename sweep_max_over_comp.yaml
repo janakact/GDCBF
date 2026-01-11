@@ -1,0 +1,61 @@
+program: train_offline.py
+method: grid
+project: sg-bg-confirm
+
+metric:
+  goal: maximize
+  name: n_reward
+
+parameters:
+  seed:
+    values: [0, 10, 20]
+  env_id:
+    values: [17] # [16, 17, 19]
+    # values: [0, 1, 2, 21, 22]
+    # values: [1,5,7]
+    # values: [13, 8, 5]
+    # values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] # SG
+    # values: [24]
+    # values: [21, 22, 23, 24, 25, 26, 27, 28]
+    # values: [30, 31, 32, 33, 34, 35, 36, 37, 38] # Meta
+  mode: 
+    values: [14,15]
+
+  cost_scale: 
+    values: [0.05, 0.1, 0.2]
+
+  transition_tau:
+    values: [0.5, 0.6, 0.7, 0.8, 0.9]
+  # mode:
+  #   values: [14, 15]
+  # transition_tau:
+  #   values: [0.6, 0.75]
+  # tanh_scale:
+  #   values: [25, 50, 200]
+  # cost_scale:
+  #   values: [25]
+  # cost_tau:
+  #   values: [0.1, 0.2, 0.3, 0.4, 0.5]
+  # reward_tau:
+  #   values: [0.5, 0.6, 0.7, 0.8, 0.9]
+  #
+command:
+  - ${env}
+  - python
+  - train_offline.py
+  - --config
+  - ./train_config.py:r
+  - ${args}
+
+# command:
+#   - ${env}
+#   - RL_LIB=gym
+# Comments
+  # cost_tau:
+  #   values: [0.1, 0.2]
+  # reward_tau:
+  #   values: [0.5, 0.6]
+  # tanh_scale:
+  #   values: [0.1, 0.5, 1.0]
+  # eval_temperature:
+  #   values: [0.05]

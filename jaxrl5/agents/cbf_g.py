@@ -195,7 +195,46 @@ class CBF(Agent):
             transition_tau=transition_tau,
         )
 
+
     def update_actor(agent, batch: DatasetDict) -> Tuple[Agent, Dict[str, float]]:
+        # rng = agent.rng
+        # key, rng = jax.random.split(rng, 2)
+        qs = agent.target_critic.apply_fn({"params": agent.target_critic.params}, 
+                                          batch["observations"], 
+                                          batch["actions"])
+        q = qs.min(axis=0)
+        v = agent.value.apply_fn({"params": agent.value.params}, batch["observations"])
+
+        '''
+        cost reward
+        '''
+        qcs = agent.safe_target_critic.apply_fn(
+            {"params": agent.safe_target_critic.params},
+            batch["observations"],
+            batch["actions"],
+        )
+
+        
+        reward_adv = q - v
+        reward_weights = jnp.exp(reward_adv * agent.reward_temperature)
+        reward_weights = jnp.clip(reward_weights, 0, 100)
+        weights = reward_weights 
+    
+
+        def actor_loss_fn(actor_params: FrozenDict[str, Any]):
+            # print(batch['observations'].shape)
+            dist = agent.score_model.apply_fn({"params": actor_params}, batch["observations"])
+            log_probs = dist.log_prob(batch['actions'])
+            actor_loss = -(log_probs * weights).mean() 
+            return actor_loss, {"weights": weights.mean(), "log_probs": log_probs.mean()}
+                
+        grads, info = jax.grad(actor_loss_fn, has_aux=True)(agent.score_model.params)
+        score_model = agent.score_model.apply_gradients(grads=grads)
+        agent = agent.replace(score_model=score_model)
+
+        return agent, info
+
+    def update_actor_with_penalty(agent, batch: DatasetDict) -> Tuple[Agent, Dict[str, float]]:
         
         # Compute weights as before (reward_adv, etc.)
         qs = agent.target_critic.apply_fn({"params": agent.target_critic.params}, 
