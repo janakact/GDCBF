@@ -10,7 +10,7 @@ parameters:
   seed:
     values: [0, 10, 20]
   env_id:
-    values: [17] # [16, 17, 19]
+    values: [16, 17, 19]
     # values: [0, 1, 2, 21, 22]
     # values: [1,5,7]
     # values: [13, 8, 5]
@@ -21,8 +21,11 @@ parameters:
   mode: 
     values: [15]
 
-  noise_scale: 
-    values: [0.0, 0.05, 0.1, 0.2]
+  # noise_scale: 
+  #   values: [0.0, 0.01, 0.05, 0.1, 0.2]
+  
+  outliers_percent:
+    values: [0.1, 0.15, 0.2]
 
   transition_tau:
     values: [0.5, 0.6, 0.7, 0.8, 0.9]

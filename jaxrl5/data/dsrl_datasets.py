@@ -8,7 +8,7 @@ import h5py
 
 
 class DSRLDataset(Dataset):
-    def __init__(self, env: gym.Env, clip_to_eps: bool = True, eps: float = 1e-5, critic_type="qc", data_location=None, cost_scale=1., ratio = 1.0, noise_scale=0.0):
+    def __init__(self, env: gym.Env, clip_to_eps: bool = True, eps: float = 1e-5, critic_type="qc", data_location=None, cost_scale=1., ratio = 1.0, noise_scale=None, outliers_percent=None):
 
         if data_location is not None:
             # Point Robot
@@ -33,7 +33,7 @@ class DSRLDataset(Dataset):
             if ratio == 1.0:
                 dataset_dict = env.get_dataset()
                 dataset_dict = env.pre_process_data(dataset_dict,
-                                noise_scale=noise_scale)
+                                noise_scale=noise_scale, outliers_percent=outliers_percent)
             else:
                 _, dataset_name = os.path.split(env.dataset_url)
                 file_list = dataset_name.split('-')
