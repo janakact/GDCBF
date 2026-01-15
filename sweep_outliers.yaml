@@ -34,6 +34,7 @@ parameters:
   #
 command:
   - ${env}
+  - RL_LIB=gym
   - python
   - launcher/examples/train_md.py
   - --config

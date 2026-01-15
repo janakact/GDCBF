@@ -71,6 +71,8 @@ def pre_process_data(
             cost_returns >= self.max_episode_cost / 2,
             reward_returns >= self.max_episode_reward / 2
         )
+        # outliers_num = np.max([int(n_trajs * outliers_percent), 1])
+        outliers_num = np.max([int(mask.sum() * outliers_percent), 1])
         print("Outliers:", outliers_percent, outliers_num, len(traj_idx), mask.shape, outliers_num/mask.sum(), outliers_num/len(traj_idx))
         # exit()
         outliers_idx = self.rng.choice(
