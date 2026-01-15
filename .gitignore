@@ -18,7 +18,7 @@ results/
 *.hdf5
 
 # folder
-data/
+./data/
 assets/
 reference/
 sweep/
