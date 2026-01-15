@@ -3,11 +3,13 @@ from env.rl_compat import gym
 import dsrl
 import numpy as np
 from jaxrl5.data.dataset import Dataset
+from jaxrl5.data.pre_process import pre_process_data
 import h5py
 
 
+
 class DSRLDataset(Dataset):
-    def __init__(self, env: gym.Env, clip_to_eps: bool = True, eps: float = 1e-5, critic_type="qc", data_location=None, cost_scale=1., ratio = 1.0):
+    def __init__(self, env: gym.Env, clip_to_eps: bool = True, eps: float = 1e-5, critic_type="qc", data_location=None, cost_scale=1., ratio = 1.0, outliers_percent:float = None):
 
         if data_location is not None:
             # Point Robot
@@ -31,6 +33,8 @@ class DSRLDataset(Dataset):
             # DSRL
             if ratio == 1.0:
                 dataset_dict = env.get_dataset()
+                dataset_dict = pre_process_data(env, dataset_dict, outliers_percent=outliers_percent)
+
             else:
                 _, dataset_name = os.path.split(env.dataset_url)
                 file_list = dataset_name.split('-')

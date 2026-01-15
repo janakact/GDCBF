@@ -31,7 +31,8 @@ flags.DEFINE_float('tanh_scale', 100.0, 'Tanh Scale')
 flags.DEFINE_float('cost_scale', 25.0, 'Cost Scale')
 flags.DEFINE_float('cost_tau', 0.15, 'Cost Tau')
 flags.DEFINE_float('reward_tau', 0.75, 'Reward Tau')
-flags.DEFINE_float('transition_tau', 0.75, 'Transition cost tau')
+flags.DEFINE_float('transition_tau', 0.5, 'Transition cost tau')
+flags.DEFINE_float('outliers_percent', 0.0, 'Outliers Percent')
 flags.DEFINE_integer('max_steps', 500_001, 'max steps')
 # flags.DEFINE_integer('eval', 10000, 'eval steps')
 flags.DEFINE_string('project', '081125', 'Name of the experiment')
@@ -57,6 +58,8 @@ def call_main(details, env_id):
     wandb.init(project=details['project'], name=details['experiment_name'], group=details['group'], config=config_for_wandb)
     # wandb.init( name=details['experiment_name'], group=details['group'], config=config_for_wandb)
     # details['agent_kwargs']['mode'] = wandb.config.mode
+    outliers_percent = details['agent_kwargs']['outliers_percent']
+    print("Outlier Percent", outliers_percent)
     if details['env_name'] == 'PointRobot':
         assert details['dataset_kwargs']['pr_data'] is not None, "No data for Point Robot"
         env = eval(details['env_name'])(id=0, seed=0)
@@ -65,8 +68,10 @@ def call_main(details, env_id):
         ds = DSRLDataset(env, data_location=details['dataset_kwargs']['pr_data'])
     else:
         env = gym.make(details['env_name']) #,use_render=True)
+        env.set_target_cost(details['agent_kwargs']['cost_limit'])
+
         # ds = DSRLDataset(env, critic_type=details['agent_kwargs']['critic_type'], cost_scale=details['dataset_kwargs']['cost_scale'], ratio=details['ratio'])
-        ds = DSRLDataset(env, cost_scale=details['dataset_kwargs']['cost_scale'])#, ratio=details['ratio'])
+        ds = DSRLDataset(env, cost_scale=details['dataset_kwargs']['cost_scale'], outliers_percent=outliers_percent)#, ratio=details['ratio'])
         env_max_steps = env._max_episode_steps
         env = wrap_gym(env, cost_limit=details['agent_kwargs']['cost_limit'])
         ds.normalize_returns(env.max_episode_reward, env.min_episode_reward, env_max_steps)
@@ -78,6 +83,7 @@ def call_main(details, env_id):
     config_dict = dict(details['agent_kwargs'])
     model_cls = config_dict.pop("model_cls") 
     config_dict.pop("cost_scale") 
+    config_dict.pop("outliers_percent") 
     agent = globals()[model_cls].create(
         details['seed'], env.observation_space, env.action_space, **config_dict
     )
@@ -115,6 +121,8 @@ def main(_):
     parameters['agent_kwargs']['reward_tau'] = FLAGS.reward_tau
     parameters['agent_kwargs']['transition_tau'] = FLAGS.transition_tau
     parameters['dataset_kwargs']['cost_scale'] = FLAGS.cost_scale # This is the primary
+    parameters['agent_kwargs']['outliers_percent'] = FLAGS.outliers_percent if FLAGS.outliers_percent > 0.0 else None
+
     parameters['max_steps']  = FLAGS.max_steps
     parameters['seed'] = FLAGS.seed
     # mode = FLAGS.mode
