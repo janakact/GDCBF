@@ -4,7 +4,9 @@ import gym
 import dsrl
 import numpy as np
 from jaxrl5.data.dataset import Dataset
+from jaxrl5.data.pre_process import pre_process_data
 import h5py
+
 
 
 class DSRLDataset(Dataset):
@@ -32,7 +34,7 @@ class DSRLDataset(Dataset):
             # DSRL
             if ratio == 1.0:
                 dataset_dict = env.get_dataset()
-                dataset_dict = env.pre_process_data(dataset_dict,
+                dataset_dict = pre_process_data(env, dataset_dict,
                                 noise_scale=noise_scale, outliers_percent=outliers_percent)
             else:
                 _, dataset_name = os.path.split(env.dataset_url)
