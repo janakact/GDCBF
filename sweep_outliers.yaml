@@ -14,7 +14,7 @@ parameters:
     # values: [0,1,6,7,4,5,16,17,19] # From SG-FISOR
     # values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] # SG
     # values: [21, 22, 23, 24, 25, 26, 27, 28]
-    values: [30, 31, 32, 33] #, 33, 34, 35, 36, 37, 38] # Meta
+    values: [34, 35, 36, 37, 38] # Meta< [30, 31, 32, 33] #,
   mode:
     values: [15]
 
@@ -22,7 +22,7 @@ parameters:
     values: [0.5,0.6]
 
   outliers_percent:
-    values: [0.15, 0.3]
+    values: [0.5, 0.6, 0.7, 0.8]
   # tanh_scale:
   #   values: [25, 50, 200]
   cost_scale:
